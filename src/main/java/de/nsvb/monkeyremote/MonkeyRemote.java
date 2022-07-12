@@ -25,7 +25,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.JFrame;
@@ -39,10 +42,10 @@ import javax.swing.event.MouseInputAdapter;
  */
 public class MonkeyRemote extends JFrame {
 
-    private static final String ADB = "C:\\adb\\adb.exe";
+    private static final String ADB = "/usr/bin/adb";
     private static final long TIMEOUT = 5000;
-
-    private static float scalingFactor = 0.5f;
+    // private static String phone_name = "";
+    private static float scalingFactor = 0.3f;
 
     private final IChimpDevice device;
 
@@ -52,7 +55,7 @@ public class MonkeyRemote extends JFrame {
         int dWScaled = (int) (deviceWidth * scalingFactor);
         int dHScaled = (int) (deviceHeight * scalingFactor);
 
-        setTitle("MonkeyRemote");
+        setTitle("Lanforge Interop");
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -81,7 +84,7 @@ public class MonkeyRemote extends JFrame {
             if (error_counter > 10) {
                 break;
             }
-            System.out.println("#" + i++);
+            // System.out.println("#" + i++);
             try {
                 BufferedImage screenImage = device.takeSnapshot().getBufferedImage();
                 if (screenImage.getWidth() != deviceWidth || screenImage.getHeight() != deviceHeight) {
@@ -107,28 +110,57 @@ public class MonkeyRemote extends JFrame {
 
     public static void main(String[] args) {
         String adb = ADB;
-        if (args.length == 2) {
-            adb = args[0];
-            scalingFactor = Float.parseFloat(args[1]);
-            args = new String[0];
-        }
-        if (args.length > 0 || !new File(adb).exists() || new File(adb).isDirectory()) {
+        String phone_name;
+        if (args.length == 3 || !new File(adb).exists() || new File(adb).isDirectory()) {
             if (!new File(adb).exists()) {
                 System.err.println("Error: ADB executable wasn't found at \"" + adb + "\"");
             }
             if (new File(adb).isDirectory()) {
                 System.err.println("Error: Path to ADB executable is a directory");
             }
-            System.out.println("Usage: MonkeyRemote [Path to ADB executable] [Scaling factor]");
+        }else{
+            System.out.println("Usage: MonkeyRemote [Path to ADB executable] [Scaling factor] [Device Serial Number]");
             return;
         }
 
+        adb = args[0];
+        scalingFactor = Float.parseFloat(args[1]);
+        phone_name = args[2];
+
+
+
+        ArrayList<String> phone_list = new ArrayList<>();
+        try {
+            Process p = Runtime.getRuntime().exec("adb devices");
+//            System.out.println(p.pid());
+//            System.out.println(p.exitValue());
+            p.getOutputStream().close();
+            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            input.readLine();
+            String line;
+            while ((line = input.readLine()) != null) {
+                String temp = line.split("\t")[0];
+                if (!temp.isEmpty()) {
+                    phone_list.add(temp);
+                }
+            }
+//            System.out.println(phone_list);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (phone_name.isBlank()){
+            if(phone_list.isEmpty()){
+                System.out.println("Device not connected.");
+                System.exit(0);
+            }
+            phone_name = phone_list.get(0);
+        }
         //http://stackoverflow.com/questions/6686085/how-can-i-make-a-java-app-using-the-monkeyrunner-api
         Map<String, String> options = new TreeMap<>();
         options.put("backend", "adb");
         options.put("adbLocation", adb);
         ChimpChat chimpchat = ChimpChat.getInstance(options);
-        IChimpDevice device = chimpchat.waitForConnection(TIMEOUT, ".*");
+        IChimpDevice device = chimpchat.waitForConnection(TIMEOUT, phone_name);
 
         if (device == null) {
             System.err.println("Error: Couldn't connect to device");
@@ -144,7 +176,7 @@ public class MonkeyRemote extends JFrame {
         int width = screen.getWidth();
         int height = screen.getHeight();
 
-        System.out.println("Device screen dimension:" + height + "x" + width);
+        // System.out.println("Device screen dimension:" + height + "x" + width);
 
         MonkeyRemote remote = new MonkeyRemote(device, width, height, screen);
         //chimpchat.shutdown();
