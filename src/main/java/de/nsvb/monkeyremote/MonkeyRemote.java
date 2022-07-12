@@ -148,7 +148,7 @@ public class MonkeyRemote extends JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (phone_name.isBlank()){
+        if (phone_name.trim().equals("")) {
             if(phone_list.isEmpty()){
                 System.out.println("Device not connected.");
                 System.exit(0);
