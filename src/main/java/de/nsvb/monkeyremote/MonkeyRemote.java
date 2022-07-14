@@ -126,7 +126,10 @@ public class MonkeyRemote extends JFrame {
         adb = args[0];
         scalingFactor = Float.parseFloat(args[1]);
         phone_name = args[2];
-
+        if(phone_name.equals("")){
+            System.out.println("Error: Device name cann't be empty");
+            System.exit(0);
+        }
 
 
         ArrayList<String> phone_list = new ArrayList<>();
@@ -163,7 +166,8 @@ public class MonkeyRemote extends JFrame {
         IChimpDevice device = chimpchat.waitForConnection(TIMEOUT, phone_name);
 
         if (device == null) {
-            System.err.println("Error: Couldn't connect to device");
+            System.err.println("Error: Couldn't connect to device with serial number " + phone_name);
+            System.exit(0);
             return;
         }
 
