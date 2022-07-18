@@ -31,6 +31,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
+// import java.awt.event.KeyAdapter;
+// import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
@@ -49,13 +51,13 @@ public class MonkeyRemote extends JFrame {
 
     private final IChimpDevice device;
 
-    public MonkeyRemote(IChimpDevice device, int deviceWidth, int deviceHeight, BufferedImage initialScreen) {
+    public MonkeyRemote(IChimpDevice device, int deviceWidth, int deviceHeight, BufferedImage initialScreen, String phone_name) {
         this.device = device;
 
         int dWScaled = (int) (deviceWidth * scalingFactor);
         int dHScaled = (int) (deviceHeight * scalingFactor);
 
-        setTitle("Lanforge Interop");
+        setTitle(phone_name);
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -170,10 +172,18 @@ public class MonkeyRemote extends JFrame {
             System.exit(0);
             return;
         }
-
-        /*for (String prop : device.getPropertyList()) {
-         System.out.println(prop + ": " + device.getProperty(prop));
-         }*/
+        String phone_model = "";
+        for (String prop : device.getPropertyList()) {
+            if(prop.equals("build.model") || prop.equals("build.manufacturer")){
+                if(phone_model.equals("")){
+                    phone_model += device.getProperty(prop);
+                }else{
+                    phone_model += "(" + device.getProperty(prop) + ")";
+                }
+                
+            }
+        //  System.out.println(prop + ": " + device.getProperty(prop));
+         }
         device.wake();
         BufferedImage screen = device.takeSnapshot().getBufferedImage();
 
@@ -182,7 +192,7 @@ public class MonkeyRemote extends JFrame {
 
         // System.out.println("Device screen dimension:" + height + "x" + width);
 
-        MonkeyRemote remote = new MonkeyRemote(device, width, height, screen);
+        MonkeyRemote remote = new MonkeyRemote(device, width, height, screen, phone_model);
         //chimpchat.shutdown();
     }
 
