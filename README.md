@@ -1,5 +1,5 @@
 # MonkeyRemote
-Remote control your Android device via ADB
+Remote control your multiple Android device via ADB serial number
 
 Warning: The screen updates are very slow (~1 frame per second).
 
@@ -13,5 +13,5 @@ Run with:
 
 so for example:
 
-    java -jar MonkeyRemote-0.5.jar "/usr/bin/adb" 0.5 RZ8R82G4F8Y
+    java -jar MonkeyRemote-0.5.jar "/usr/bin/adb" 0.5 RZ8R82GFED4
 
